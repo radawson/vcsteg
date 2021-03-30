@@ -372,7 +372,7 @@ if __name__ == "__main__":
             print()
             print("Everything OK. Try mounting the file in VeraCrypt and playing the video.")
         else:
-            print("Error: input video format is not supported"
+            print("Error: input video format is not supported")
             print("Supported file formats include: " + supported_formats, file=sys.stderr)
     except (ProcessingError, IOError) as e:
         print("ERROR:", e, file=sys.stderr)
