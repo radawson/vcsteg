@@ -24,6 +24,10 @@ version 0.2. Usage of this software is subject to the following conditions:
 
 Version history
 ===============
+3.2 (Richard Dawson)
+- change argument interpreter to argparse
+- code refactor
+
 3.1 (Richard Dawson)
 - bugfixes
 
@@ -41,6 +45,7 @@ Version history
 - initial release
 """
 import sys, os, struct
+import argparse
 
 MAX_BUFFER_SIZE = 67108864   # 64 MiB
 TC_HEADER_SIZE = 65536       # 64 KiB
@@ -139,7 +144,7 @@ class Atom(object):
 
 ################################################################################
 
-def AnalyseFile(f):
+def AnalyzeFile(f):
     atoms = None
     try:
         atoms = parseAtoms(f, 0, os.fstat(f.fileno()).st_size, None)
@@ -280,7 +285,7 @@ def Pass_Helper(video_path):
     f = None
     try:
         f = open(video_path, "rb+")
-        last = AnalyseFile(f)[-1]
+        last = AnalyzeFile(f)[-1]
         if last.name == b'skip':
             print("Removing padding 'skip' atom")
             f.truncate(last.start)
@@ -311,36 +316,33 @@ def validate_input(file_path):
 
 if __name__ == "__main__":
     supported_formats = ["mov","qt","mp4","m4v","m4a","3gp"]
-    if len(sys.argv) < 3:
-        pname = sys.argv[0].split(os.sep)[-1]
-        print("too few arguments")
-        print("Usage (1):", pname, "<MP4 Video> <VeraCrypt Container>")
-        print("Embeds a VeraCrypt container int a video file so that both are still readable.")
-        print()
-        print("<MP4 Video> is a file in one of the following formats:")
-        print("   QuickTime / ISO MPEG-4  (%s)" % (", ".join(["*." + fmt for fmt in supported_formats])))
-        print()
-        print("<VeraCrypt Container> is a VeraCrypt hidden volume. The file will be")
-        print("modified in-place so that it seems like a copy of the input file that can be")
-        print("opened in an appropriate viewer/player. However, the hidden TrueCtype volume")
-        print("will also be preserved and can be used.")
-        print()
-        print()
-        print("Usage (2):", pname, "-p <Hybrid File>")
-        print("<Hybrid File> is a file that is both VeraCrypt container and a video.")
-        print("This file will be modified in-place to make it possible to change the VeraCrypt")
-        print("password. After changing the password, this command should be run again to")
-        print("remove that (detectable and hence insecure) modification!")
-        print()
-        print()
-        sys.exit(2)
+    # Constant strings
+    DESCRIPTION = "Embeds a VeraCrypt container into a video file so that both are still readable."
+    HELP_NORMAL = "\n\nUsage: %(prog)s <MP4 Video> <VeraCrypt Container>\n" \
+                  "<MP4 Video> is a file in one of the following formats:\n" \
+                  "   QuickTime / ISO MPEG-4 " + (", ".join(["*." + fmt for fmt in supported_formats]))
+    HELP_PASSWORD="\n\nUsage: %(prog)s -p <Hybrid File>\n" \
+                  "<Hybrid File> is a file that is both VeraCrypt container and a video.\n" \
+                  "This file will be modified in-place to make it possible to change the VeraCrypt\n" \
+                  "password. After changing the password, this command should be run again to\n" \
+                  "remove that (detectable and hence insecure) modification!"
+    
+    
+    # Handle arguments with argparse
+    parser = argparse.ArgumentParser(
+                            description=DESCRIPTION + HELP_NORMAL + HELP_PASSWORD,
+                            formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("video", help="path and filename of the video file")
+    parser.add_argument("container", help="path and filename of the veracrypt file")
+    parser.add_argument("-p", "--password", help="Change the password of an existing hybrid file", action="store_true")
+    args = parser.parse_args()
 
-    if sys.argv[1] == "-p":
-        Pass_Helper(sys.argv[2])
+    if args.password:
+        Pass_Helper(args.video)
         sys.exit(0) 
     #TODO: Validate file paths to properly handle spaces
-    video_path = validate_input(sys.argv[1])
-    tc_path = validate_input(sys.argv[2])
+    video_path = validate_input(args.video)
+    tc_path = validate_input(args.container)
     video_file = None
     tc_file = None
     tcSize = 0
@@ -359,7 +361,7 @@ if __name__ == "__main__":
         video_ext = os.path.splitext(video_path)[1].lstrip(".")
         if video_ext in supported_formats:  
             print("Parsing video ...")
-            atoms = AnalyseFile(video_file)
+            atoms = AnalyzeFile(video_file)
             print("Embedding ... be patient")
             vcsteg_Embed(atoms, tc_file)
             tc_file.close()
