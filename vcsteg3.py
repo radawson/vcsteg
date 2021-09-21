@@ -314,7 +314,7 @@ def validate_input(file_path):
 
 ################################################################################
 
-if __name__ == "__main__":
+def main():
     supported_formats = ["mov","qt","mp4","m4v","m4a","3gp"]
     # Constant strings
     DESCRIPTION = "Embeds a VeraCrypt container into a video file so that both are still readable."
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
                             description=DESCRIPTION + HELP_NORMAL + HELP_PASSWORD,
                             formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("video", help="path and filename of the video file")
+    parser.add_argument("video", help="path and filename of the video (or hybrid) file")
     parser.add_argument("container", nargs="?", help="path and filename of the veracrypt file")
     parser.add_argument("-p", "--password", help="Change the password of an existing hybrid file", action="store_true")
     args = parser.parse_args()
@@ -385,3 +385,9 @@ if __name__ == "__main__":
     finally:
         video_file.close()
         tc_file.close()
+
+################################################################################
+
+if __name__ == "__main__":
+    main()
+    
