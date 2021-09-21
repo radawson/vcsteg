@@ -375,7 +375,7 @@ def main():
                     tc_path = new_tc_path
             print("Hybrid file '%s' was created successfully." % tc_path)
             print()
-            print("Everything OK. Try mounting the file in VeraCrypt and playing the video.")
+            print("Everything OK. Try mounting the file in VeraCrypt and try playing the video.")
         else:
             print("Error: input video format is not supported")
             print("Supported file formats include: " + supported_formats, file=sys.stderr)
