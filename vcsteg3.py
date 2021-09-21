@@ -333,16 +333,19 @@ if __name__ == "__main__":
                             description=DESCRIPTION + HELP_NORMAL + HELP_PASSWORD,
                             formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("video", help="path and filename of the video file")
-    parser.add_argument("container", help="path and filename of the veracrypt file")
+    parser.add_argument("container", nargs="?", help="path and filename of the veracrypt file")
     parser.add_argument("-p", "--password", help="Change the password of an existing hybrid file", action="store_true")
     args = parser.parse_args()
+    
+    # TODO: Validate file paths to properly handle spaces
+    video_path = validate_input(args.video)
+    if args.container:
+        tc_path = validate_input(args.container)
 
     if args.password:
         Pass_Helper(args.video)
         sys.exit(0) 
-    #TODO: Validate file paths to properly handle spaces
-    video_path = validate_input(args.video)
-    tc_path = validate_input(args.container)
+
     video_file = None
     tc_file = None
     tcSize = 0
